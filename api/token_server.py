@@ -51,11 +51,14 @@ LIVEKIT_URL = os.getenv("LIVEKIT_URL")
 LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY")
 LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET")
 
-# Validate required credentials
+# Validate required credentials at runtime rather than import-time.
+# Avoid raising on import so serverless platforms (like Vercel) can deploy
+# even when environment variables are not configured yet. Individual
+# endpoints will return informative errors if credentials are missing.
 if not all([LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET]):
-    raise ValueError(
-        "Missing required LiveKit credentials. "
-        "Set LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET in .env"
+    logger.warning(
+        "LiveKit credentials not fully configured. "
+        "Set LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET in environment for production."
     )
 
 # Create FastAPI app
@@ -795,8 +798,10 @@ async def startup():
     logger.info(f"API Secret configured: {bool(LIVEKIT_API_SECRET)}")
     
     if not verify_livekit_connection():
-        logger.error("LiveKit connection verification failed!")
-        raise RuntimeError("Invalid LiveKit credentials")
+        logger.warning("LiveKit connection verification failed; continuing without LiveKit credentials configured.")
+        # Do not raise — allow server to start so health checks and other
+        # non-LiveKit endpoints can function. Individual routes that need
+        # credentials will return 5xx/4xx with clear messages.
     
     logger.info("Token server ready ✓")
 
