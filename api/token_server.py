@@ -582,6 +582,7 @@ Rules:
     name         → the prospect's own name
     company      → the prospect's company or organisation
     industry     → the prospect's industry or sector
+    business_type → the prospect's business type (e.g., B2B, B2C, SaaS, e-commerce, agency, consultancy)
     location     → city, region or country the prospect mentioned
     team_size    → size of the prospect's team or company
     role         → the prospect's job title or role
