@@ -561,8 +561,12 @@ CRITICAL INSTRUCTIONS:
 # Uses a dedicated Groq API key + llama-4-scout model.
 # Completely separate from the main chat model — no persona, no knowledge base.
 
-LEAD_EXTRACTION_KEY = "GROQ_KEY_REDACTED"
-LEAD_EXTRACTION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+# Read lead-extraction credentials from environment (.env)
+LEAD_EXTRACTION_KEY = os.getenv("LEAD_EXTRACTION_KEY")
+LEAD_EXTRACTION_MODEL = os.getenv(
+    "LEAD_EXTRACTION_MODEL",
+    "meta-llama/llama-4-scout-17b-16e-instruct",
+)
 
 LEAD_EXTRACTION_SYSTEM = """You are a silent lead data extraction assistant for a B2B sales tool.
 
@@ -607,6 +611,10 @@ async def extract_lead(request: ExtractLeadRequest):
         {"role": "system", "content": LEAD_EXTRACTION_SYSTEM},
         {"role": "user", "content": f"Conversation to analyse:\n\n{request.conversation}"},
     ]
+
+    if not LEAD_EXTRACTION_KEY:
+        logger.error("Missing LEAD_EXTRACTION_KEY environment variable")
+        raise HTTPException(status_code=500, detail="Lead extraction API key not configured")
 
     headers = {
         "Content-Type": "application/json",
