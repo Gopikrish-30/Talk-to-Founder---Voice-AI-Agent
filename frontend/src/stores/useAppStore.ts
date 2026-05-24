@@ -22,6 +22,9 @@ export interface LeadData {
   budget?: string
   email?: string
   phone?: string
+  // Added fields
+  ended_at?: string
+  duration_seconds?: string
 }
 
 export interface AppState {

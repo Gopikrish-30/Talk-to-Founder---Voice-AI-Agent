@@ -16,7 +16,7 @@ Response:
 
 import os
 import logging
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -413,6 +413,24 @@ Sent at: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
     )
 
 
+
+@app.post("/end-call", tags=["lead"])
+async def end_call(callId: str = Body(...), leadData: dict = Body(...)):
+    """Receive end call event and persist lead data."""
+    import json
+    from pathlib import Path
+    leads_dir = Path(__file__).parent / "leads"
+    leads_dir.mkdir(exist_ok=True)
+    lead_path = leads_dir / f"{callId}.json"
+    try:
+        with open(lead_path, "w", encoding="utf-8") as f:
+            json.dump(leadData, f, indent=2)
+        logger.info(f"Lead data saved to {lead_path}")
+    except Exception as e:
+        logger.error(f"Failed to save lead data: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save lead data")
+    return {"status": "saved", "callId": callId}
+
 def load_system_prompt() -> str:
     """Load system prompt from file"""
     from pathlib import Path
@@ -538,6 +556,102 @@ CRITICAL INSTRUCTIONS:
     except Exception as e:
         logger.error(f"Groq error: {type(e).__name__}: {e}")
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+# ── Lead Extraction Endpoint ─────────────────────────────────────────────────
+# Uses a dedicated Groq API key + llama-4-scout model.
+# Completely separate from the main chat model — no persona, no knowledge base.
+
+LEAD_EXTRACTION_KEY = "GROQ_KEY_REDACTED"
+LEAD_EXTRACTION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+
+LEAD_EXTRACTION_SYSTEM = """You are a silent lead data extraction assistant for a B2B sales tool.
+
+You will receive ONLY the prospect's/caller's own messages (not the sales agent's replies).
+Your job is to extract structured information about the PROSPECT from what they wrote.
+
+Rules:
+- Return ONLY a raw JSON object — no markdown, no code fences, no explanation whatsoever.
+- Only include a field if you are CERTAIN the prospect explicitly mentioned it.
+- If a field was NOT mentioned, omit it entirely (do NOT include null or empty values).
+- Never infer, guess, or hallucinate values.
+- Fields to extract (all optional):
+    name         → the prospect's own name
+    company      → the prospect's company or organisation
+    industry     → the prospect's industry or sector
+    location     → city, region or country the prospect mentioned
+    team_size    → size of the prospect's team or company
+    role         → the prospect's job title or role
+    pain_point   → the primary problem or challenge the prospect described
+    current_tools → tools, platforms or software the prospect currently uses
+    ai_experience → any prior AI or automation experience the prospect mentioned
+    timeline     → the prospect's project or decision timeline
+    budget       → budget range or number the prospect mentioned
+    email        → email address if the prospect shared it
+    phone        → phone number if the prospect shared it"""
+
+class ExtractLeadRequest(BaseModel):
+    conversation: str   # plain-text conversation to analyse
+
+@app.post("/api/extract-lead", tags=["lead"])
+async def extract_lead(request: ExtractLeadRequest):
+    """
+    Extract structured lead data from a conversation using llama-4-scout.
+    Uses a dedicated API key separate from the main chat model.
+    """
+    import requests
+
+    if not request.conversation or not request.conversation.strip():
+        raise HTTPException(status_code=400, detail="conversation cannot be empty")
+
+    groq_messages = [
+        {"role": "system", "content": LEAD_EXTRACTION_SYSTEM},
+        {"role": "user", "content": f"Conversation to analyse:\n\n{request.conversation}"},
+    ]
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {LEAD_EXTRACTION_KEY}",
+    }
+    payload = {
+        "model": LEAD_EXTRACTION_MODEL,
+        "messages": groq_messages,
+        "temperature": 0.1,     # low temperature → deterministic JSON
+        "max_tokens": 400,
+    }
+
+    try:
+        logger.info(f"[LeadExtract] Calling {LEAD_EXTRACTION_MODEL} for lead extraction")
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            json=payload,
+            headers=headers,
+            timeout=20,
+        )
+        if response.status_code != 200:
+            logger.error(f"[LeadExtract] Groq error {response.status_code}: {response.text}")
+            raise HTTPException(status_code=502, detail=f"Lead extraction model error: {response.status_code}")
+
+        data = response.json()
+        raw = data.get("choices", [])[0].get("message", {}).get("content", "")
+
+        # Strip accidental markdown fences
+        raw = raw.replace("```json", "").replace("```", "").strip()
+
+        import json as _json
+        extracted = _json.loads(raw)
+        logger.info(f"[LeadExtract] Extracted fields: {list(extracted.keys())}")
+        return {"lead": extracted}
+
+    except _json.JSONDecodeError as e:
+        logger.error(f"[LeadExtract] JSON parse error: {e} | raw: {raw}")
+        raise HTTPException(status_code=502, detail="Lead extraction returned invalid JSON")
+    except requests.exceptions.Timeout:
+        raise HTTPException(status_code=504, detail="Lead extraction model timeout")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[LeadExtract] Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 class TTSRequest(BaseModel):
     text: str

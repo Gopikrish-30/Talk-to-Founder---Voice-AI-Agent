@@ -4,6 +4,8 @@ import { ConversationHistory } from './components/ConversationHistory'
 import { VoiceOrb } from './components/VoiceOrb'
 import { ChatInput } from './components/ChatInput'
 import { ContactForm } from './components/ContactForm'
+import { CallHeader } from './components/CallHeader'
+import { CallSummary } from './components/CallSummary'
 import { useVoiceAssistant } from './hooks/useVoiceAssistant'
 import { useAppStore } from './stores/useAppStore'
 import { ChevronLeft } from 'lucide-react'
@@ -17,7 +19,13 @@ function App() {
 
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#f8fafc] text-slate-800 selection:bg-slate-900/10 selection:text-slate-900 relative font-sans">
-      
+
+      {/* Live Call Header – shows End Session button when a call is active */}
+      <CallHeader />
+
+      {/* Post-call Summary Modal */}
+      <CallSummary />
+
       {/* Header Bar */}
       <header className="px-6 pt-6 flex-shrink-0 z-20">
         <div className="bg-white rounded-2xl px-6 py-4 flex items-center justify-between border border-slate-200/80 shadow-sm">

@@ -143,6 +143,65 @@ export const useVoiceAssistant = () => {
     })
   }
 
+  // ── Lead Extraction ──────────────────────────────────────────────────────────
+  // Uses a dedicated backend endpoint (/api/extract-lead) which runs
+  // llama-4-scout-17b via a separate Groq API key — completely isolated
+  // from the main conversation model. Called silently after every AI turn.
+  const extractLeadData = async () => {
+    const messages = messagesRef.current
+    if (messages.length < 2) return // not enough conversation yet
+
+    // ⚠️  Only send USER messages to the extraction model.
+    // Agent messages contain Husain's name/company (the founder) — if we
+    // include them the LLM will mistakenly capture "Husain" / "Maneuver" as
+    // the lead's name/company. We only care about what the PROSPECT said.
+    const userMessages = messages.filter((m: any) => m.role === 'user')
+    if (userMessages.length === 0) return
+
+    const conversationText = userMessages
+      .map((m: any) => m.content)
+      .join('\n')
+
+    try {
+      const response = await fetch('http://localhost:8000/api/extract-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation: conversationText }),
+      })
+
+      if (!response.ok) {
+        console.warn(`[Lead] /api/extract-lead returned ${response.status}`)
+        return
+      }
+
+      const data = await response.json()
+      const extracted = data.lead
+
+      if (!extracted || typeof extracted !== 'object' || Array.isArray(extracted)) return
+
+      // Merge into store — only overwrite with non-empty string values
+      const store = useAppStore.getState()
+      const fields = [
+        'name','company','industry','location','team_size','role',
+        'pain_point','current_tools','ai_experience','timeline','budget','email','phone'
+      ] as const
+      let changed = false
+      for (const field of fields) {
+        const val = extracted[field]
+        if (typeof val === 'string' && val.trim()) {
+          store.updateLeadField(field, val.trim())
+          changed = true
+        }
+      }
+      if (changed) {
+        console.log('[Lead] llama-4-scout extracted from user messages ✓', extracted)
+      }
+    } catch (e) {
+      // Silently ignore — lead extraction is best-effort, never blocks UX
+      console.warn('[Lead] Extraction error (non-blocking):', e)
+    }
+  }
+
   // Call Groq LLaMA LLM to process conversational turn
   const callLLM = async (userSpeech: string) => {
     // Stop recording speech immediately to prevent any interim/final transcript updates during thinking/speaking
@@ -162,7 +221,12 @@ export const useVoiceAssistant = () => {
     // Clear speech recognition transcript memory so it starts fresh for the next turn!
     finalTranscriptRef.current = ''
     setInputText('')
-    
+
+    // Ensure call is marked active (shows End Session header) even for text-only users
+    if (!useAppStore.getState().isCallActive) {
+      startCall()
+    }
+
     try {
       setAgentState('thinking')
       console.log('[Groq] Sending query:', userSpeech)
@@ -255,6 +319,9 @@ export const useVoiceAssistant = () => {
       
       // Post agent response to chat transcript
       addMessage('agent', replyText)
+
+      // Extract lead data from conversation in background (non-blocking)
+      extractLeadData().catch((e) => console.warn('[Lead] Extraction failed silently:', e))
 
       // Speak back
       await speakText(replyText)
