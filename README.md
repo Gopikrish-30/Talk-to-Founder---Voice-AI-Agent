@@ -223,7 +223,6 @@ For an optimal production deployment, follow this monorepo multi-cloud deploymen
    - **Service B (Voice Agent)**: Set build command to `pip install -r agent/requirements.txt` and start command to `python agent/main.py start`. Add the environment variables from your `.env` file.
 3. Link Service A's deployed URL to the frontend environment variable `VITE_TOKEN_SERVER_URL`.
 
----
 
 ## 📜 MIT License
 This project is open-source software licensed under the [MIT License](LICENSE).
