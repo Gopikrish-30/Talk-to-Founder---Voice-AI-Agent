@@ -50,7 +50,7 @@ export const CallHeader: React.FC = () => {
     const callId = store.callId
     const leadData = { ...store.leadData, ended_at: endTimestamp, duration_seconds: durationSeconds }
     try {
-      const tokenServerUrl = (import.meta as any).env?.VITE_TOKEN_SERVER_URL || 'http://localhost:8000'
+      const tokenServerUrl = (import.meta as any).env?.VITE_TOKEN_SERVER_URL || '/api'
       await fetch(`${tokenServerUrl}/end-call`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

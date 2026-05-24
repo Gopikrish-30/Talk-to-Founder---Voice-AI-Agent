@@ -1,7 +1,10 @@
 import axios from 'axios'
 import { Room } from 'livekit-client'
 
-const TOKEN_SERVER_URL = (import.meta as any).env?.VITE_TOKEN_SERVER_URL || 'http://localhost:8000'
+// Use relative `/api` by default so the frontend works on the same origin
+// both locally (when proxied) and in production on Vercel. If you need to
+// override for local debugging, set `VITE_TOKEN_SERVER_URL` in the frontend env.
+const TOKEN_SERVER_URL = (import.meta as any).env?.VITE_TOKEN_SERVER_URL || '/api'
 
 export interface TokenResponse {
   token: string

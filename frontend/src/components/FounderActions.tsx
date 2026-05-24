@@ -17,7 +17,7 @@ import {
 import { useAppStore } from '../stores/useAppStore'
 import axios from 'axios'
 
-const TOKEN_SERVER_URL = (import.meta as any).env?.VITE_TOKEN_SERVER_URL || 'http://localhost:8000'
+const TOKEN_SERVER_URL = (import.meta as any).env?.VITE_TOKEN_SERVER_URL || '/api'
 
 export const FounderActions: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'contact' | 'meet'>('contact')
