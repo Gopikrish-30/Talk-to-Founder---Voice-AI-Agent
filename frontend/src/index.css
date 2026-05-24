@@ -1,0 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: #f8fafc; /* Premium crisp slate-50 background */
+}
+
+:root {
+  --font-display: 'Outfit', sans-serif;
+  --font-sans: 'Sora', sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #0f172a; /* Slate 900 */
+  background-color: #f8fafc;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Premium Solid Panel Containers (pure minimalist luxury) */
+.panel-premium {
+  background: #ffffff;
+  border: 1px solid #e2e8f0; /* Thin slate-200 */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  border-radius: 16px;
+  transition: all 0.2s ease-in-out;
+}
+
+.panel-premium:hover {
+  border-color: #cbd5e1; /* slightly darker on hover */
+}
+
+/* Frosted Premium Glass side panels with dual hairline border */
+.panel-premium-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid #cbd5e1; /* highly defined slate-300 border */
+  box-shadow: 
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+    0 1px 3px 0 rgba(0, 0, 0, 0.02),
+    0 4px 20px -2px rgba(15, 23, 42, 0.04);
+  border-radius: 16px;
+  transition: all 0.2s ease-in-out;
+}
+
+.panel-premium-glass:hover {
+  border-color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.premium-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0; /* Slate 200 */
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.premium-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+/* Precise Minimalist Input Fields */
+.premium-input {
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important; /* highly visible slate-300 */
+  color: #0f172a !important;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.premium-input:focus {
+  background: #ffffff !important;
+  border-color: #0f172a !important; /* solid graphite border on focus */
+  outline: none !important;
+}
+
+/* High-Visibility Premium Input Pill */
+.input-premium-pill {
+  background: #f1f5f9; /* Slate 100 background to pop against white app panels */
+  border: 1.5px solid #cbd5e1; /* clearly visible slate-300 border */
+  border-radius: 9999px;
+  padding: 6px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.input-premium-pill:focus-within {
+  background: #ffffff;
+  border-color: #0f172a; /* high contrast slate-900 border on active focus */
+  box-shadow: 
+    inset 0 1px 2px rgba(15, 23, 42, 0.03),
+    0 0 0 3px rgba(15, 23, 42, 0.06);
+}
+
+/* Editorial Chat Bubble Aesthetics */
+.message-bubble {
+  position: relative;
+  word-wrap: break-word;
+  max-width: 80%;
+  padding: 12px 18px;
+  line-height: 1.55;
+  font-size: 0.92rem;
+  font-weight: 400;
+}
+
+.message-bubble.user {
+  background: #0f172a; /* Solid ink black/graphite */
+  color: #ffffff;
+  border-radius: 12px 12px 2px 12px;
+  border: 1px solid #0f172a;
+}
+
+.message-bubble.agent {
+  background: #f1f5f9; /* Solid soft light-grey slate-100 */
+  color: #0f172a;
+  border-radius: 12px 12px 12px 2px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Custom Scrollbar for Minimalist White Theme */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* slate-300 */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* slate-400 */
+}
+
+/* Keyframe Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out forwards;
+}
