@@ -4,6 +4,8 @@ import { useAppStore } from '../stores/useAppStore'
 const GROQ_API_KEY = (import.meta as any).env?.VITE_GROQ_API_KEY || ''
 
 const getApiBase = () => {
+  const envUrl = (import.meta as any).env?.VITE_BACKEND_URL
+  if (envUrl) return envUrl
   return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:8000'
     : ''
