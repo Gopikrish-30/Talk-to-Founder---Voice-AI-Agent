@@ -145,6 +145,7 @@ def verify_livekit_connection() -> bool:
 
 # Routes
 @app.get("/", tags=["root"])
+@app.get("/api", tags=["root"])
 async def root():
     """Root endpoint - info about the server"""
     return {
@@ -158,6 +159,7 @@ async def root():
 
 
 @app.get("/health", response_model=HealthResponse, tags=["health"])
+@app.get("/api/health", response_model=HealthResponse, tags=["health"])
 async def health():
     """Health check endpoint"""
     return HealthResponse(
@@ -167,6 +169,7 @@ async def health():
 
 
 @app.get("/token", response_model=TokenResponse, tags=["token"])
+@app.get("/api/token", response_model=TokenResponse, tags=["token"])
 async def get_token(
     room: str = Query(..., description="LiveKit room name"),
     username: str = Query(..., description="Participant username/identity"),
@@ -221,6 +224,7 @@ async def get_token(
 
 
 @app.get("/validate", tags=["token"])
+@app.get("/api/validate", tags=["token"])
 async def validate_token(token: str = Query(..., description="JWT token to validate")):
     """
     Validate a JWT token (for debugging).
@@ -246,6 +250,7 @@ async def validate_token(token: str = Query(..., description="JWT token to valid
 
 
 @app.post("/contact", response_model=ContactResponse, tags=["contact"])
+@app.post("/api/contact", response_model=ContactResponse, tags=["contact"])
 async def receive_contact(request: ContactRequest):
     """
     Receive contact form submission, store it locally, and send a real email to husain@maneuver.ae.
@@ -418,6 +423,7 @@ Sent at: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
 
 
 @app.post("/end-call", tags=["lead"])
+@app.post("/api/end-call", tags=["lead"])
 async def end_call(callId: str = Body(...), leadData: dict = Body(...)):
     """Receive end call event and persist lead data."""
     import json

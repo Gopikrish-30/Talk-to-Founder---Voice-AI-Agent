@@ -34,7 +34,11 @@ import {
 import { useAppStore } from '../stores/useAppStore'
 import axios from 'axios'
 
-const TOKEN_SERVER_URL = (import.meta as any).env?.VITE_TOKEN_SERVER_URL || 'http://localhost:8000'
+const rawUrl = (import.meta as any).env?.VITE_TOKEN_SERVER_URL || '/api'
+const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+const TOKEN_SERVER_URL = rawUrl.startsWith('http') 
+  ? rawUrl 
+  : (isLocal ? `http://localhost:8000${rawUrl}` : rawUrl)
 
 interface LeadCapturePanelProps {
   onClose?: () => void

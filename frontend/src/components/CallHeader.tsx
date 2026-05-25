@@ -50,7 +50,12 @@ export const CallHeader: React.FC = () => {
     const callId = store.callId
     const leadData = { ...store.leadData, ended_at: endTimestamp, duration_seconds: durationSeconds }
     try {
-      const tokenServerUrl = (import.meta as any).env?.VITE_TOKEN_SERVER_URL || '/api'
+      const rawUrl = (import.meta as any).env?.VITE_TOKEN_SERVER_URL || '/api'
+      const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      const tokenServerUrl = rawUrl.startsWith('http') 
+        ? rawUrl 
+        : (isLocal ? `http://localhost:8000${rawUrl}` : rawUrl)
+      
       await fetch(`${tokenServerUrl}/end-call`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

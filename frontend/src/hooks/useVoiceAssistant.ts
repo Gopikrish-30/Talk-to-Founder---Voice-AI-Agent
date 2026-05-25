@@ -3,6 +3,12 @@ import { useAppStore } from '../stores/useAppStore'
 
 const GROQ_API_KEY = (import.meta as any).env?.VITE_GROQ_API_KEY || ''
 
+const getApiBase = () => {
+  return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:8000'
+    : ''
+}
+
 export const useVoiceAssistant = () => {
   const [isConnecting, setIsConnecting] = useState(false)
   const error = useAppStore((state) => state.error)
@@ -45,7 +51,7 @@ export const useVoiceAssistant = () => {
           }
           
           // Stream directly using GET endpoint to allow instant native buffering & playback
-          const streamUrl = `http://localhost:8000/api/tts?text=${encodeURIComponent(text)}`
+          const streamUrl = `${getApiBase()}/api/tts?text=${encodeURIComponent(text)}`
           const audio = new Audio(streamUrl)
           audio.crossOrigin = "anonymous" // Allow cross-origin audio analysis
           audioRef.current = audio
@@ -163,7 +169,7 @@ export const useVoiceAssistant = () => {
       .join('\n')
 
     try {
-      const response = await fetch('http://localhost:8000/api/extract-lead', {
+      const response = await fetch(`${getApiBase()}/api/extract-lead`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversation: conversationText }),
@@ -239,7 +245,7 @@ export const useVoiceAssistant = () => {
           content: m.content,
         }))
 
-        const response = await fetch('http://localhost:8000/api/chat', {
+        const response = await fetch(`${getApiBase()}/api/chat`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
